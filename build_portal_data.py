@@ -93,6 +93,26 @@ for b in blocks:
     
     hashtags = "#猫 #猫のいる暮らし #保護猫 #猫あるある #癒やし猫 #Shorts #YouTubeShorts #TikTok猫"
     
+    # SNSステータスマッピングの取得
+    MASTER_PATH = r"C:\Users\kurro\video-publisher\data\sns_post_status_master.json"
+    with open(MASTER_PATH, "r", encoding="utf-8") as mf:
+        master_data = json.load(mf)
+    
+    # 弾数またはタイトルからマスターデータを検索
+    ig_info = {"status": "未確認"}
+    x_info = {"status": "未確認"}
+    for v_entry in master_data.values():
+        if v_entry["group"] == "猫ショート動画":
+            v_fname = v_entry["filename"]
+            if pnum == 999 and "豪華完全版" in v_fname:
+                ig_info = v_entry["instagram"]
+                x_info = v_entry["x"]
+                break
+            elif pnum != 999 and f"第{pnum}弾" in v_fname:
+                ig_info = v_entry["instagram"]
+                x_info = v_entry["x"]
+                break
+
     items.append({
         "id": pnum,
         "partLabel": "豪華完全版" if pnum == 999 else f"第{pnum}弾",
@@ -102,6 +122,8 @@ for b in blocks:
         "description": desc,
         "videoUrl": catbox_urls.get(pnum, ""),
         "thumbnail": f"thumbnails/thumb_{pnum}.jpg",
+        "instagram": ig_info,
+        "x": x_info,
         "hashtags": hashtags,
         "postText": f"{title}\n\n{desc}\n\n{hashtags}"
     })

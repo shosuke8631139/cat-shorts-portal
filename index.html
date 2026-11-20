@@ -71,14 +71,19 @@
       </div>
 
       <!-- カウンター -->
-      <div class="flex items-center gap-2 text-xs bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-        <span class="text-slate-400">進捗:</span>
-        <span id="postedCount" class="font-bold text-emerald-400">0</span>
-        <span class="text-slate-500">/</span>
-        <span id="totalCount" class="font-bold text-slate-200">38</span>
-        <span class="text-slate-400">完了</span>
-        <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden ml-1">
-          <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+      <div class="flex items-center gap-3 text-xs bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+        <div class="flex items-center gap-1.5">
+          <span class="text-pink-400 font-bold">📸 IG:</span>
+          <span class="text-emerald-400 font-bold" id="igPostedCount">5</span><span class="text-slate-500">済</span>
+          <span class="text-amber-400 font-bold ml-1" id="igSchedCount">6</span><span class="text-slate-500">予</span>
+          <span class="text-slate-400 ml-1" id="igUncCount">27</span><span class="text-slate-600">未</span>
+        </div>
+        <div class="w-px h-3 bg-slate-800"></div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-sky-400 font-bold">𝕏 X:</span>
+          <span class="text-emerald-400 font-bold" id="xPostedCount">4</span><span class="text-slate-500">済</span>
+          <span class="text-amber-400 font-bold ml-1" id="xSchedCount">4</span><span class="text-slate-500">予</span>
+          <span class="text-slate-400 ml-1" id="xUncCount">30</span><span class="text-slate-600">未</span>
         </div>
       </div>
     </div>
@@ -103,11 +108,14 @@
 
       <!-- フィルターボタン -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">
-        <button id="filterAll" onclick="setFilter('all')" class="filter-btn px-3 py-2 rounded-xl bg-amber-500 text-slate-950 shadow-md">すべて</button>
-        <button id="filterUnposted" onclick="setFilter('unposted')" class="filter-btn px-3 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800">未投稿のみ</button>
-        <button id="filterPosted" onclick="setFilter('posted')" class="filter-btn px-3 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800">投稿済み</button>
+        <button id="filterAll" onclick="setFilter('all')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-amber-500 text-slate-950 shadow-md">すべて</button>
+        <button id="filterIgUnc" onclick="setFilter('ig_unc')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-slate-900 text-pink-400 hover:bg-slate-800 border border-slate-800">📸 IG未投稿</button>
+        <button id="filterIgPub" onclick="setFilter('ig_pub')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800">📸 IG投稿済</button>
+        <button id="filterXUnc" onclick="setFilter('x_unc')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-slate-900 text-sky-400 hover:bg-slate-800 border border-slate-800">𝕏 X未投稿</button>
+        <button id="filterXPub" onclick="setFilter('x_pub')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800">𝕏 X投稿済</button>
+        <button id="filterSched" onclick="setFilter('sched')" class="filter-btn px-2.5 py-1.5 rounded-xl bg-slate-900 text-amber-300 hover:bg-slate-800 border border-slate-800">⏳ 予約済み</button>
         
-        <button onclick="toggleSort()" class="px-3 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 flex items-center gap-1.5 ml-1">
+        <button onclick="toggleSort()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 flex items-center gap-1.5 ml-1">
           <span id="sortLabel">新しい順</span>
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
         </button>
@@ -198,13 +206,20 @@
 
     // 統計更新
     function updateStats() {
-      const total = CAT_VIDEOS.length;
-      const postedCount = Object.values(postedState).filter(Boolean).length;
-      document.getElementById('postedCount').innerText = postedCount;
-      document.getElementById('totalCount').innerText = total;
-      
-      const pct = total > 0 ? (postedCount / total) * 100 : 0;
-      document.getElementById('progressBar').style.width = pct + '%';
+      let igPub = 0, igSch = 0, igUnc = 0;
+      let xPub = 0, xSch = 0, xUnc = 0;
+      CAT_VIDEOS.forEach(v => {
+        const ig = v.instagram?.status || '未確認';
+        const x = v.x?.status || '未確認';
+        if (ig === '投稿済み') igPub++; else if (ig === '予約済み') igSch++; else igUnc++;
+        if (x === '投稿済み') xPub++; else if (x === '予約済み') xSch++; else xUnc++;
+      });
+      document.getElementById('igPostedCount').innerText = igPub;
+      document.getElementById('igSchedCount').innerText = igSch;
+      document.getElementById('igUncCount').innerText = igUnc;
+      document.getElementById('xPostedCount').innerText = xPub;
+      document.getElementById('xSchedCount').innerText = xSch;
+      document.getElementById('xUncCount').innerText = xUnc;
     }
 
     // フィルター切り替え
@@ -215,10 +230,20 @@
         btn.classList.add('bg-slate-900', 'text-slate-300');
       });
       
-      const activeBtn = filter === 'all' ? 'filterAll' : filter === 'unposted' ? 'filterUnposted' : 'filterPosted';
-      const el = document.getElementById(activeBtn);
-      el.classList.remove('bg-slate-900', 'text-slate-300');
-      el.classList.add('bg-amber-500', 'text-slate-950');
+      const map = {
+        'all': 'filterAll',
+        'ig_unc': 'filterIgUnc',
+        'ig_pub': 'filterIgPub',
+        'x_unc': 'filterXUnc',
+        'x_pub': 'filterXPub',
+        'sched': 'filterSched'
+      };
+      const activeId = map[filter] || 'filterAll';
+      const el = document.getElementById(activeId);
+      if (el) {
+        el.classList.remove('bg-slate-900', 'text-slate-300');
+        el.classList.add('bg-amber-500', 'text-slate-950');
+      }
 
       renderVideos();
     }
@@ -349,11 +374,17 @@
         );
       }
 
-      // 投稿状況フィルター
-      if (currentFilter === 'unposted') {
-        list = list.filter(v => !postedState[v.id]);
-      } else if (currentFilter === 'posted') {
-        list = list.filter(v => !!postedState[v.id]);
+      // SNS投稿状況フィルター
+      if (currentFilter === 'ig_unc') {
+        list = list.filter(v => (v.instagram?.status || '未確認') === '未確認');
+      } else if (currentFilter === 'ig_pub') {
+        list = list.filter(v => (v.instagram?.status || '未確認') === '投稿済み');
+      } else if (currentFilter === 'x_unc') {
+        list = list.filter(v => (v.x?.status || '未確認') === '未確認');
+      } else if (currentFilter === 'x_pub') {
+        list = list.filter(v => (v.x?.status || '未確認') === '投稿済み');
+      } else if (currentFilter === 'sched') {
+        list = list.filter(v => (v.instagram?.status === '予約済み') || (v.x?.status === '予約済み'));
       }
 
       // ソート
@@ -367,16 +398,17 @@
       emptyMsg.classList.add('hidden');
 
       list.forEach(v => {
-        const isPosted = !!postedState[v.id];
+        const isIgPosted = v.instagram?.status === '投稿済み';
+        const isXPosted = v.x?.status === '投稿済み';
         const card = document.createElement('div');
         card.className = `bg-slate-900/90 border rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 hover:border-slate-700 shadow-lg ${
-          isPosted ? 'border-emerald-500/30 opacity-75 hover:opacity-100' : 'border-slate-800'
+          (isIgPosted && isXPosted) ? 'border-emerald-500/30' : 'border-slate-800'
         }`;
 
         card.innerHTML = `
           <div>
-            <!-- 上部バッジ＆トグル -->
-            <div class="flex items-center justify-between gap-2 mb-2.5">
+            <!-- 上部バッジ＆SNSステータス -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
               <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 text-xs font-black rounded-lg ${
                   v.id === 999 
@@ -392,16 +424,32 @@
                 </span>
               </div>
 
-              <!-- 投稿状況トグル -->
-              <button 
-                onclick="togglePosted(${v.id}, event)"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition ${
-                  isPosted 
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30' 
-                    : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
+              <!-- SNS投稿状況バッジ（Instagram & X 完全個別管理） -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <!-- Instagram -->
+                <${v.instagram?.url ? 'a href="' + v.instagram.url + '" target="_blank"' : 'div'} class="px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 transition ${
+                  v.instagram?.status === '投稿済み' 
+                    ? 'bg-pink-600/25 text-pink-300 border border-pink-500/50 hover:bg-pink-600/40 cursor-pointer' 
+                    : (v.instagram?.status === '予約済み' 
+                        ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50' 
+                        : 'bg-slate-800/80 text-slate-500 border border-slate-700/60')
                 }">
-                <span>${isPosted ? '✓ 投稿済み' : '○ 未投稿'}</span>
-              </button>
+                  <span>📸 IG: ${v.instagram?.status || '未確認'}</span>
+                  ${v.instagram?.url ? '<svg class="w-2.5 h-2.5 ml-0.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' : ''}
+                </${v.instagram?.url ? 'a' : 'div'}>
+
+                <!-- X (Twitter) -->
+                <${v.x?.url ? 'a href="' + v.x.url + '" target="_blank"' : 'div'} class="px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 transition ${
+                  v.x?.status === '投稿済み' 
+                    ? 'bg-sky-500/25 text-sky-300 border border-sky-500/50 hover:bg-sky-500/40 cursor-pointer' 
+                    : (v.x?.status === '予約済み' 
+                        ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50' 
+                        : 'bg-slate-800/80 text-slate-500 border border-slate-700/60')
+                }">
+                  <span>𝕏 X: ${v.x?.status || '未確認'}</span>
+                  ${v.x?.url ? '<svg class="w-2.5 h-2.5 ml-0.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' : ''}
+                </${v.x?.url ? 'a' : 'div'}>
+              </div>
             </div>
 
             <!-- 動画の最初の画面（サムネイルプレビュー） -->
